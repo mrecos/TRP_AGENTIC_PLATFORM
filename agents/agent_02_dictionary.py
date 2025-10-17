@@ -168,10 +168,13 @@ def generate_source_ddl(
     
     try:
         # Call AI_COMPLETE to generate DDL
+        # Escape single quotes in the prompt
+        escaped_prompt = prompt.replace("'", "''")
+        
         ai_query = f"""
         SELECT SNOWFLAKE.CORTEX.AI_COMPLETE(
             'llama3.1-70b',
-            '{prompt.replace("'", "''")}'
+            '{escaped_prompt}'
         ) as ddl
         """
         
@@ -270,10 +273,12 @@ def optimize_data_types(
     """
     
     try:
+        escaped_prompt = optimization_prompt.replace("'", "''")
+        
         ai_query = f"""
         SELECT SNOWFLAKE.CORTEX.AI_COMPLETE(
             'llama3.1-70b',
-            '{optimization_prompt.replace("'", "''")}'
+            '{escaped_prompt}'
         ) as optimized_ddl
         """
         
@@ -330,10 +335,12 @@ def enhance_ddl_with_constraints(
     """
     
     try:
+        escaped_prompt = enhancement_prompt.replace("'", "''")
+        
         ai_query = f"""
         SELECT SNOWFLAKE.CORTEX.AI_COMPLETE(
             'llama3.1-70b',
-            '{enhancement_prompt.replace("'", "''")}'
+            '{escaped_prompt}'
         ) as enhanced_ddl
         """
         
@@ -458,10 +465,12 @@ def generate_proposal_summary(
     """
     
     try:
+        escaped_prompt = prompt.replace("'", "''")
+        
         query = f"""
         SELECT SNOWFLAKE.CORTEX.AI_COMPLETE(
             'llama3.1-8b',
-            '{prompt.replace("'", "''")}'
+            '{escaped_prompt}'
         ) as summary
         """
         

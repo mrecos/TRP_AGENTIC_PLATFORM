@@ -258,9 +258,12 @@ def detect_pii_phi(session: Session, df: Any) -> Dict:
                 
                 if len(value) > 0:
                     # Detect PII
+                    # Convert list to SQL array syntax
+                    pii_cats_str = str(pii_categories).replace("'", "''")
+                    
                     pii_query = f"""
                     SELECT SNOWFLAKE.CORTEX.AI_CLASSIFY(
-                        '{value}',
+                        '{value.replace("'", "''")}',
                         {pii_categories}
                     ) as classification
                     """
@@ -280,7 +283,7 @@ def detect_pii_phi(session: Session, df: Any) -> Dict:
                     # Detect PHI
                     phi_query = f"""
                     SELECT SNOWFLAKE.CORTEX.AI_CLASSIFY(
-                        '{value}',
+                        '{value.replace("'", "''")}',
                         {phi_categories}
                     ) as classification
                     """
@@ -346,7 +349,7 @@ def generate_synonym_suggestions(
         ai_query = f"""
         SELECT SNOWFLAKE.CORTEX.AI_COMPLETE(
             'llama3.1-8b',
-            '{prompt}'
+            '{prompt.replace("'", "''")}'
         ) as suggestions
         """
         
@@ -388,7 +391,7 @@ def generate_profiling_summary(
         query = f"""
         SELECT SNOWFLAKE.CORTEX.AI_COMPLETE(
             'llama3.1-8b',
-            '{prompt}'
+            '{prompt.replace("'", "''")}'
         ) as summary
         """
         

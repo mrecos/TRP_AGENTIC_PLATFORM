@@ -692,10 +692,12 @@ elif page == "💬 AI Assistant":
             with st.spinner("Thinking..."):
                 try:
                     # Use Snowflake Intelligence / Cortex Analyst
+                    escaped_prompt = f"You are a helpful data assistant. Answer this question about workflows: {prompt}".replace("'", "''")
+                    
                     ai_query = f"""
                     SELECT SNOWFLAKE.CORTEX.AI_COMPLETE(
                         'llama3.1-8b',
-                        'You are a helpful data assistant. Answer this question about workflows: {prompt.replace("'", "''")}'
+                        '{escaped_prompt}'
                     ) as response
                     """
                     

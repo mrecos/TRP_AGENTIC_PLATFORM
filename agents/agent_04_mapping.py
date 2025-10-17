@@ -295,10 +295,12 @@ def generate_field_mappings(
     
     try:
         # Use AI_COMPLETE with structured output
+        escaped_prompt = prompt.replace("'", "''")
+        
         ai_query = f"""
         SELECT SNOWFLAKE.CORTEX.AI_COMPLETE(
             'llama3.1-70b',
-            '{prompt.replace("'", "''")}'
+            '{escaped_prompt}'
         ) as mappings
         """
         
@@ -412,10 +414,12 @@ def generate_transformation_sql(
     """
     
     try:
+        escaped_prompt = prompt.replace("'", "''")
+        
         ai_query = f"""
         SELECT SNOWFLAKE.CORTEX.AI_COMPLETE(
             'llama3.1-70b',
-            '{prompt.replace("'", "''")}'
+            '{escaped_prompt}'
         ) as sql
         """
         
@@ -604,10 +608,12 @@ def suggest_model_type(
     """
     
     try:
+        escaped_prompt = prompt.replace("'", "''")
+        
         ai_query = f"""
         SELECT SNOWFLAKE.CORTEX.AI_COMPLETE(
             'llama3.1-8b',
-            '{prompt.replace("'", "''")}'
+            '{escaped_prompt}'
         ) as model_type
         """
         
@@ -740,10 +746,12 @@ def generate_mapping_summary(
     """
     
     try:
+        escaped_prompt = prompt.replace("'", "''")
+        
         query = f"""
         SELECT SNOWFLAKE.CORTEX.AI_COMPLETE(
             'llama3.1-8b',
-            '{prompt.replace("'", "''")}'
+            '{escaped_prompt}'
         ) as summary
         """
         

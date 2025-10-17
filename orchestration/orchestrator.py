@@ -494,10 +494,12 @@ class AgenticOrchestrator:
         """
         
         try:
+            escaped_prompt = prompt.replace("'", "''")
+            
             query = f"""
             SELECT SNOWFLAKE.CORTEX.AI_COMPLETE(
                 'llama3.1-8b',
-                '{prompt.replace("'", "''")}'
+                '{escaped_prompt}'
             ) as summary
             """
             
