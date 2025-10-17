@@ -215,24 +215,6 @@ CREATE TABLE IF NOT EXISTS PROFILING_RESULTS (
     CREATED_AT TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
 );
 
--- ============================================================================
--- Create indexes for query performance
--- ============================================================================
-
--- Workflow tracking indexes
-USE SCHEMA WORKFLOWS;
-CREATE INDEX IF NOT EXISTS idx_workflow_status ON WORKFLOW_EXECUTIONS(STATUS);
-CREATE INDEX IF NOT EXISTS idx_workflow_time ON WORKFLOW_EXECUTIONS(START_TIME);
-
--- Agent execution indexes
-CREATE INDEX IF NOT EXISTS idx_agent_workflow ON AGENT_EXECUTION_LOG(WORKFLOW_ID);
-CREATE INDEX IF NOT EXISTS idx_agent_name ON AGENT_EXECUTION_LOG(AGENT_NAME);
-
--- Metadata indexes
-USE SCHEMA METADATA;
-CREATE INDEX IF NOT EXISTS idx_dict_table ON ENTERPRISE_DATA_DICTIONARY(TABLE_NAME);
-CREATE INDEX IF NOT EXISTS idx_dict_pii ON ENTERPRISE_DATA_DICTIONARY(IS_PII);
-
 -- Success message
 SELECT 'Foundational tables created successfully!' AS STATUS;
 
