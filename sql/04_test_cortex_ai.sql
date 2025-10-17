@@ -39,8 +39,7 @@ SELECT SNOWFLAKE.CORTEX.AI_CLASSIFY(
 SELECT '=== Test 3: AI_FILTER ===' AS TEST_NAME;
 
 SELECT SNOWFLAKE.CORTEX.AI_FILTER(
-    'Is Snowflake a cloud data platform? Answer yes or no.',
-    'yes'
+    'Is Snowflake a cloud data platform?'
 ) AS test_ai_filter;
 
 -- ============================================================================
@@ -61,7 +60,7 @@ SELECT '=== Test 5: AI_EXTRACT ===' AS TEST_NAME;
 
 SELECT SNOWFLAKE.CORTEX.AI_EXTRACT(
     'The company was founded in 2012 and is headquartered in Bozeman, Montana.',
-    'When was the company founded?'
+    ['When was the company founded?']
 ) AS test_ai_extract;
 
 -- ============================================================================
@@ -71,6 +70,7 @@ SELECT SNOWFLAKE.CORTEX.AI_EXTRACT(
 SELECT '=== Test 6: AI_COUNT_TOKENS ===' AS TEST_NAME;
 
 SELECT SNOWFLAKE.CORTEX.AI_COUNT_TOKENS(
+    'AI_COMPLETE',
     'llama3.1-8b',
     'This is a test prompt to count tokens.'
 ) AS test_ai_count_tokens;
@@ -81,9 +81,10 @@ SELECT SNOWFLAKE.CORTEX.AI_COUNT_TOKENS(
 
 SELECT '=== Test 7: PROMPT Helper ===' AS TEST_NAME;
 
-SELECT SNOWFLAKE.CORTEX.PROMPT(
-    'Summarize this text: {text}',
-    OBJECT_CONSTRUCT('text', 'Snowflake is a cloud data platform.')
+SELECT AI_COMPLETE(
+    'claude-3-5-sonnet',
+    PROMPT(
+    'Summarize this text: {0}', 'Snowflake is a cloud data platform.')
 ) AS test_prompt_helper;
 
 -- ============================================================================
@@ -92,19 +93,16 @@ SELECT SNOWFLAKE.CORTEX.PROMPT(
 
 SELECT '=== Test 8: AI_COMPLETE with Structured Output ===' AS TEST_NAME;
 
-SELECT SNOWFLAKE.CORTEX.AI_COMPLETE(
-    'llama3.1-8b',
-    [
-        {
-            'role': 'system',
-            'content': 'You are a helpful data assistant.'
-        },
-        {
-            'role': 'user',
-            'content': 'List three benefits of cloud data platforms in JSON format with keys: benefit_1, benefit_2, benefit_3'
-        }
-    ]
-) AS test_structured_output;
+SELECT AI_COMPLETE(
+    model => 'llama3.1-70b',
+    prompt => 'Return the customer sentiment for the following review: New kid on the block, this pizza joint! The pie arrived neither in a flash nor a snail\'s pace, but the taste? Divine! Like a symphony of Italian flavors, it was a party in my mouth. But alas, the party was a tad pricey for my humble abode\'s standards. A mixed bag, I\'d say!',
+    response_format => {
+            'type':'json',
+            'schema':{'type' : 'object','properties' : {'sentiment_categories':{'type': 'object','properties':
+            {'food_quality' : {'type' : 'string'},'food_taste': {'type':'string'}, 'wait_time': {'type':'string'}, 'food_cost': {'type':'string'}},'required':['food_quality','food_taste' ,'wait_time','food_cost']}}}
+
+    }
+);
 
 -- ============================================================================
 -- Test 9: Non-AI Feature - INFER_SCHEMA
