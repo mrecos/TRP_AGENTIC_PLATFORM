@@ -1,0 +1,377 @@
+openapi: 3.0.0
+info:
+  title: Snowflake Agentic Platform API
+  description: REST API for the Agentic AI Platform on Snowflake
+  version: 1.0.0
+  contact:
+    name: Agentic Platform Team
+    email: support@example.com
+
+servers:
+  - url: https://{account}.snowflakecomputing.com/api/v2
+    description: Snowflake SQL API endpoint
+    variables:
+      account:
+        default: your-account
+        description: Your Snowflake account identifier
+
+security:
+  - OAuth2: []
+  - KeyPair: []
+
+paths:
+  /agents/profile:
+    post:
+      summary: Execute Data Profiling Agent
+      description: Analyze a file in a Snowflake stage to infer schema, detect PII, and generate quality reports
+      tags:
+        - Agents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - stage_path
+              properties:
+                stage_path:
+                  type: string
+                  description: Path to file in Snowflake stage
+                  example: "@RAW_DATA_STAGE/customer_data.csv"
+                sample_size:
+                  type: integer
+                  description: Number of rows to sample
+                  default: 10000
+                file_format:
+                  type: string
+                  description: File format name
+                  default: "CSV_FORMAT"
+                  enum: [CSV_FORMAT, JSON_FORMAT, PARQUET_FORMAT]
+                data_dictionary_ref:
+                  type: string
+                  description: Reference to existing data dictionary table
+                  nullable: true
+      responses:
+        '200':
+          description: Profiling completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfilingResult'
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+
+  /agents/dictionary:
+    post:
+      summary: Execute Data Dictionary Agent
+      description: Generate DDLs and enrich metadata catalog
+      tags:
+        - Agents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - profiling_results
+              properties:
+                profiling_results:
+                  type: object
+                  description: Results from profiling agent
+                target_database:
+                  type: string
+                  default: "AGENTIC_PLATFORM_DEV"
+                target_schema:
+                  type: string
+                  default: "STAGING"
+      responses:
+        '200':
+          description: Dictionary generation completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DictionaryResult'
+
+  /agents/mapping:
+    post:
+      summary: Execute Data Mapping Agent
+      description: Generate field-level mappings and DBT transformations
+      tags:
+        - Agents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - dictionary_results
+                - target_schema_name
+              properties:
+                dictionary_results:
+                  type: object
+                  description: Results from dictionary agent
+                target_schema_name:
+                  type: string
+                  example: "CURATED"
+                target_table_name:
+                  type: string
+                  nullable: true
+      responses:
+        '200':
+          description: Mapping generation completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MappingResult'
+
+  /workflows/onboard:
+    post:
+      summary: Execute Full Onboarding Workflow
+      description: Run all three agents (Profiling → Dictionary → Mapping) in sequence
+      tags:
+        - Workflows
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - stage_path
+              properties:
+                stage_path:
+                  type: string
+                  example: "@RAW_DATA_STAGE/sales_data.csv"
+                target_schema:
+                  type: string
+                  default: "CURATED"
+                target_table:
+                  type: string
+                  nullable: true
+                workflow_type:
+                  type: string
+                  default: "ONBOARDING"
+                  enum: [ONBOARDING, PROFILING_ONLY, MAPPING_ONLY]
+      responses:
+        '200':
+          description: Workflow initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowResult'
+
+  /workflows/{workflow_id}/status:
+    get:
+      summary: Get Workflow Status
+      description: Retrieve current status and results of a workflow execution
+      tags:
+        - Workflows
+      parameters:
+        - name: workflow_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workflow ID
+      responses:
+        '200':
+          description: Workflow status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowStatus'
+        '404':
+          description: Workflow not found
+
+  /workflows:
+    get:
+      summary: List Workflows
+      description: Get list of recent workflow executions
+      tags:
+        - Workflows
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [INITIATED, IN_PROGRESS, COMPLETED, FAILED]
+      responses:
+        '200':
+          description: List of workflows
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workflows:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkflowSummary'
+
+components:
+  schemas:
+    ProfilingResult:
+      type: object
+      properties:
+        profile_id:
+          type: string
+          format: uuid
+        stage_path:
+          type: string
+        inferred_schema:
+          type: object
+          properties:
+            columns:
+              type: array
+              items:
+                type: object
+            column_count:
+              type: integer
+        statistics:
+          type: object
+        pii_detected:
+          type: array
+          items:
+            type: object
+            properties:
+              column_name:
+                type: string
+              pii_type:
+                type: string
+        execution_time_seconds:
+          type: number
+
+    DictionaryResult:
+      type: object
+      properties:
+        dictionary_id:
+          type: string
+          format: uuid
+        profile_id:
+          type: string
+          format: uuid
+        source_ddl:
+          type: object
+        production_ddl:
+          type: object
+        table_name:
+          type: string
+        ddl_generated:
+          type: boolean
+        execution_time_seconds:
+          type: number
+
+    MappingResult:
+      type: object
+      properties:
+        mapping_id:
+          type: string
+          format: uuid
+        field_mappings:
+          type: array
+          items:
+            type: object
+            properties:
+              source_column:
+                type: string
+              target_column:
+                type: string
+              transformation_type:
+                type: string
+              confidence_score:
+                type: number
+        dbt_models:
+          type: array
+          items:
+            type: object
+        execution_time_seconds:
+          type: number
+
+    WorkflowResult:
+      type: object
+      properties:
+        workflow_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        profiling:
+          $ref: '#/components/schemas/ProfilingResult'
+        dictionary:
+          $ref: '#/components/schemas/DictionaryResult'
+        mapping:
+          $ref: '#/components/schemas/MappingResult'
+        total_duration_seconds:
+          type: number
+
+    WorkflowStatus:
+      type: object
+      properties:
+        workflow_id:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+          nullable: true
+        duration_seconds:
+          type: number
+          nullable: true
+        error:
+          type: string
+          nullable: true
+
+    WorkflowSummary:
+      type: object
+      properties:
+        workflow_id:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        start_time:
+          type: string
+        source:
+          type: string
+
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://account.snowflakecomputing.com/oauth/authorize
+          tokenUrl: https://account.snowflakecomputing.com/oauth/token
+          scopes:
+            session:role:AGENT_USER: Execute workflows
+            session:role:AGENT_ADMIN: Full administrative access
+
+    KeyPair:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Snowflake key pair authentication
+
+tags:
+  - name: Agents
+    description: Individual agent endpoints
+  - name: Workflows
+    description: Workflow orchestration endpoints
+

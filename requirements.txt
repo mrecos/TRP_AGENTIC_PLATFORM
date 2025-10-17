@@ -1,0 +1,36 @@
+# Snowflake Agentic AI Platform - Python Dependencies
+# Version: 1.0
+
+# Core Snowflake packages
+snowflake-snowpark-python==1.11.1
+snowflake-connector-python==3.6.0
+
+# Data processing
+pandas==2.1.4
+numpy==1.26.2
+
+# For Streamlit UI
+streamlit==1.29.0
+plotly==5.18.0
+
+# For API development (optional)
+fastapi==0.108.0
+uvicorn==0.25.0
+pydantic==2.5.3
+
+# For MCP integration (optional)
+# Note: MCP packages are emerging - check for latest
+# mcp-client==0.1.0
+
+# Utilities
+python-dotenv==1.0.0
+pyyaml==6.0.1
+
+# Testing (for development)
+pytest==7.4.3
+pytest-mock==3.12.0
+
+# Note: These are reference dependencies
+# Snowflake Streamlit and stored procedures have their own package management
+# Specify packages in stored procedure definitions using PACKAGES parameter
+

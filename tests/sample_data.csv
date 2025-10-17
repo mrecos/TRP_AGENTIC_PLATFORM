@@ -1,0 +1,12 @@
+customer_id,first_name,last_name,email,phone,date_of_birth,address,city,state,zip_code,account_created,account_status
+1001,John,Doe,john.doe@email.com,555-123-4567,1985-03-15,123 Main St,Springfield,IL,62701,2023-01-15,ACTIVE
+1002,Jane,Smith,jane.smith@email.com,555-234-5678,1990-07-22,456 Oak Ave,Chicago,IL,60601,2023-02-20,ACTIVE
+1003,Michael,Johnson,mjohnson@email.com,555-345-6789,1978-11-30,789 Pine Rd,Peoria,IL,61602,2023-03-10,ACTIVE
+1004,Emily,Williams,emily.w@email.com,555-456-7890,1995-05-08,321 Elm St,Naperville,IL,60540,2023-04-05,INACTIVE
+1005,David,Brown,david.brown@email.com,555-567-8901,1982-09-17,654 Maple Dr,Rockford,IL,61101,2023-05-12,ACTIVE
+1006,Sarah,Davis,sdavis@email.com,555-678-9012,1988-12-25,987 Cedar Ln,Joliet,IL,60431,2023-06-18,ACTIVE
+1007,Robert,Miller,robert.m@email.com,555-789-0123,1975-04-03,147 Birch Blvd,Aurora,IL,60505,2023-07-22,SUSPENDED
+1008,Lisa,Wilson,lisa.wilson@email.com,555-890-1234,1992-08-14,258 Spruce St,Elgin,IL,60120,2023-08-30,ACTIVE
+1009,James,Moore,jmoore@email.com,555-901-2345,1980-02-28,369 Ash Ave,Waukegan,IL,60085,2023-09-15,ACTIVE
+1010,Patricia,Taylor,patricia.t@email.com,555-012-3456,1987-06-19,741 Willow Way,Champaign,IL,61820,2023-10-01,ACTIVE
+
