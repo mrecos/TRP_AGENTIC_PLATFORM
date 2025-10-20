@@ -14,6 +14,45 @@ USE WAREHOUSE AGENTIC_AGENTS_WH;
 -- Register Agent 1: Data Profiling Agent
 -- ============================================================================
 
+-- MOCK function
+-- CREATE OR REPLACE PROCEDURE SP_AGENT_PROFILE(
+--     STAGE_PATH STRING,
+--     SAMPLE_SIZE NUMBER DEFAULT 10000,
+--     DATA_DICTIONARY_REF STRING DEFAULT NULL,
+--     FILE_FORMAT STRING DEFAULT 'CSV_FORMAT'
+-- )
+-- RETURNS STRING
+-- LANGUAGE PYTHON
+-- RUNTIME_VERSION = '3.10'
+-- PACKAGES = ('snowflake-snowpark-python', 'pandas')
+-- HANDLER = 'sp_agent_profile'
+-- EXECUTE AS CALLER
+-- AS
+-- $$
+-- # Import the agent code from agent_01_profiling.py
+-- # In production, this code would be imported from a stage or Git repository
+-- # For now, the code is embedded here
+
+-- import json
+-- from datetime import datetime
+
+-- def sp_agent_profile(session, stage_path, sample_size=10000, data_dictionary_ref=None, file_format='CSV_FORMAT'):
+--     """
+--     Profiling agent stored procedure.
+--     """
+    
+--     result = {
+--         'profile_id': session.sql("SELECT UUID_STRING()").collect()[0][0],
+--         'stage_path': stage_path,
+--         'sample_size': sample_size,
+--         'status': 'COMPLETED',
+--         'message': 'Profiling agent executed (placeholder - full implementation in agent_01_profiling.py)',
+--         'timestamp': str(datetime.now())
+--     }
+    
+--     return json.dumps(result, indent=2)
+-- $$;
+
 CREATE OR REPLACE PROCEDURE SP_AGENT_PROFILE(
     STAGE_PATH STRING,
     SAMPLE_SIZE NUMBER DEFAULT 10000,
@@ -26,7 +65,6 @@ RUNTIME_VERSION = '3.10'
 PACKAGES = ('snowflake-snowpark-python', 'pandas')
 HANDLER = 'sp_agent_profile'
 EXECUTE AS CALLER
-COMMENT = 'Agent 1: Data Profiling - Analyzes incoming data to infer schema, detect PII/PHI, and generate quality reports'
 AS
 $$
 # Import the agent code from agent_01_profiling.py
@@ -35,22 +73,26 @@ $$
 
 import json
 from datetime import datetime
-
 def sp_agent_profile(session, stage_path, sample_size=10000, data_dictionary_ref=None, file_format='CSV_FORMAT'):
     """
-    Profiling agent stored procedure.
+    Profiling agent stored procedure - FULL IMPLEMENTATION
     """
     
-    result = {
-        'profile_id': session.sql("SELECT UUID_STRING()").collect()[0][0],
-        'stage_path': stage_path,
-        'sample_size': sample_size,
-        'status': 'COMPLETED',
-        'message': 'Profiling agent executed (placeholder - full implementation in agent_01_profiling.py)',
-        'timestamp': str(datetime.now())
-    }
+    # Import the actual agent logic
+    # Note: In production, this would be imported from a stage or Git
+    from agent_01_profiling import profile_data
     
-    return json.dumps(result, indent=2)
+    # Execute the real profiling logic
+    results = profile_data(
+        session=session,
+        stage_path=stage_path,
+        file_format=file_format,
+        sample_size=sample_size,
+        data_dictionary_ref=data_dictionary_ref
+    )
+    
+    return json.dumps(results, indent=2, default=str)
+
 $$;
 
 -- Grant execution privileges
@@ -71,7 +113,6 @@ RUNTIME_VERSION = '3.10'
 PACKAGES = ('snowflake-snowpark-python', 'pandas')
 HANDLER = 'sp_agent_dictionary'
 EXECUTE AS CALLER
-COMMENT = 'Agent 2: Data Dictionary - Generates DDLs and enriches enterprise metadata catalog'
 AS
 $$
 import json
@@ -114,7 +155,6 @@ RUNTIME_VERSION = '3.10'
 PACKAGES = ('snowflake-snowpark-python', 'pandas')
 HANDLER = 'sp_agent_mapping'
 EXECUTE AS CALLER
-COMMENT = 'Agent 4: Data Mapping - Creates field-level mappings and transformation logic (DBT/SQL)'
 AS
 $$
 import json
@@ -158,7 +198,6 @@ RUNTIME_VERSION = '3.10'
 PACKAGES = ('snowflake-snowpark-python', 'pandas')
 HANDLER = 'sp_orchestrate_onboarding'
 EXECUTE AS CALLER
-COMMENT = 'Main orchestrator for agent workflow execution'
 AS
 $$
 import json
@@ -322,3 +361,14 @@ CALL AGENTIC_PLATFORM_DEV.AGENTS.SP_AGENT_PROFILE(
 CALL AGENTIC_PLATFORM_DEV.AGENTS.SP_GET_WORKFLOW_STATUS('your-workflow-id-here');
 */
 
+-- Check workflow details
+SELECT * FROM AGENTIC_PLATFORM_DEV.WORKFLOWS.WORKFLOW_EXECUTIONS 
+WHERE WORKFLOW_ID = '92848e13-b6a9-47f3-8fd2-10e6708d50a1';
+
+-- View profiling results
+SELECT * FROM AGENTIC_PLATFORM_DEV.AGENTS.AGENT_PROFILING_HISTORY 
+WHERE PROFILE_ID = 'b354d7d6-d59b-44ac-a20f-f82268f6b32b';
+
+-- Check DDL proposals
+SELECT * FROM AGENTIC_PLATFORM_DEV.METADATA.DDL_PROPOSALS 
+WHERE WORKFLOW_ID = '92848e13-b6a9-47f3-8fd2-10e6708d50a1';

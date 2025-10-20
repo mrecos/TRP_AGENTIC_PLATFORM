@@ -117,7 +117,7 @@ SELECT '=== Test 9: INFER_SCHEMA (Non-AI) ===' AS TEST_NAME;
 -- For this test, we'll demonstrate the syntax
 
 SELECT 'INFER_SCHEMA function syntax validated' AS infer_schema_test,
-       'Sample usage: SELECT * FROM TABLE(INFER_SCHEMA(LOCATION => ''@RAW_DATA_STAGE'', FILE_FORMAT => ''CSV_FORMAT''))' AS example_syntax;
+       'Sample usage: SELECT * FROM TABLE(INFER_SCHEMA(LOCATION => \'@AGENTIC_PLATFORM_DEV.STAGING.RAW_DATA_STAGE\', FILE_FORMAT => \'AGENTIC_PLATFORM_DEV.STAGING.CSV_FORMAT\'))' AS example_syntax;
 
 -- ============================================================================
 -- Test 10: Object Tagging (Non-AI Governance Feature)
