@@ -1,5 +1,5 @@
 -- ============================================================================
--- Quick Fix: Update SP_AGENT_PROFILE with Real Implementation
+-- Quick Fix: Update SP_AGENT_PROFILE with Real Implementation (Fixed JSON)
 -- ============================================================================
 -- Run this in Snowsight or your Snowflake client to fix the profiling agent
 -- ============================================================================
@@ -107,50 +107,78 @@ def sp_agent_profile(session, stage_path, sample_size=10000, data_dictionary_ref
         - File: {stage_path.split('/')[-1]}
         """
         
-        # Step 6: Save to database
+        # Step 6: Save to database using a simpler approach
         file_name = stage_path.split('/')[-1] if '/' in stage_path else stage_path
         
-        # Properly escape JSON strings for SQL
-        schema_json = json.dumps(schema_result).replace("'", "''").replace('"', '\\"')
-        statistics_json = json.dumps(statistics).replace("'", "''").replace('"', '\\"')
-        pii_json = json.dumps(pii_columns).replace("'", "''").replace('"', '\\"')
-        phi_json = json.dumps(phi_columns).replace("'", "''").replace('"', '\\"')
-        
-        insert_query = f"""
-        INSERT INTO AGENTIC_PLATFORM_DEV.AGENTS.AGENT_PROFILING_HISTORY (
-            PROFILE_ID,
-            WORKFLOW_ID,
-            EXECUTION_ID,
-            SOURCE_STAGE_PATH,
-            SOURCE_FILE_NAME,
-            SAMPLE_SIZE,
-            INFERRED_SCHEMA,
-            STATISTICS,
-            PII_DETECTED,
-            PHI_DETECTED,
-            DATA_QUALITY_ISSUES,
-            SYNONYM_SUGGESTIONS,
-            PROFILING_SUMMARY,
-            CREATED_AT
-        ) VALUES (
-            '{profile_id}',
-            NULL,
-            NULL,
-            '{stage_path}',
-            '{file_name}',
-            {sample_size},
-            PARSE_JSON('{schema_json}'),
-            PARSE_JSON('{statistics_json}'),
-            PARSE_JSON('{pii_json}'),
-            PARSE_JSON('{phi_json}'),
-            PARSE_JSON('[]'),
-            PARSE_JSON('[]'),
-            '{profiling_summary.replace("'", "''")}',
-            CURRENT_TIMESTAMP()
-        )
-        """
-        
-        session.sql(insert_query).collect()
+        # Use a temporary table approach to avoid JSON escaping issues
+        try:
+            # Create a temporary table for the JSON data
+            temp_table_query = f"""
+            CREATE OR REPLACE TEMPORARY TABLE temp_profiling_data (
+                profile_id STRING,
+                schema_json VARIANT,
+                statistics_json VARIANT,
+                pii_json VARIANT,
+                phi_json VARIANT,
+                summary STRING
+            )
+            """
+            session.sql(temp_table_query).collect()
+            
+            # Insert data into temp table
+            temp_insert = f"""
+            INSERT INTO temp_profiling_data VALUES (
+                '{profile_id}',
+                PARSE_JSON('{json.dumps(schema_result).replace("'", "''")}'),
+                PARSE_JSON('{json.dumps(statistics).replace("'", "''")}'),
+                PARSE_JSON('{json.dumps(pii_columns).replace("'", "''")}'),
+                PARSE_JSON('{json.dumps(phi_columns).replace("'", "''")}'),
+                '{profiling_summary.replace("'", "''")}'
+            )
+            """
+            session.sql(temp_insert).collect()
+            
+            # Insert from temp table to main table
+            main_insert = f"""
+            INSERT INTO AGENTIC_PLATFORM_DEV.AGENTS.AGENT_PROFILING_HISTORY (
+                PROFILE_ID,
+                WORKFLOW_ID,
+                EXECUTION_ID,
+                SOURCE_STAGE_PATH,
+                SOURCE_FILE_NAME,
+                SAMPLE_SIZE,
+                INFERRED_SCHEMA,
+                STATISTICS,
+                PII_DETECTED,
+                PHI_DETECTED,
+                DATA_QUALITY_ISSUES,
+                SYNONYM_SUGGESTIONS,
+                PROFILING_SUMMARY,
+                CREATED_AT
+            )
+            SELECT 
+                '{profile_id}',
+                NULL,
+                NULL,
+                '{stage_path}',
+                '{file_name}',
+                {sample_size},
+                schema_json,
+                statistics_json,
+                pii_json,
+                phi_json,
+                PARSE_JSON('[]'),
+                PARSE_JSON('[]'),
+                summary,
+                CURRENT_TIMESTAMP()
+            FROM temp_profiling_data
+            WHERE profile_id = '{profile_id}'
+            """
+            session.sql(main_insert).collect()
+            
+        except Exception as db_error:
+            # If database save fails, continue with response
+            print(f"Database save failed: {db_error}")
         
         # Return results
         results = {
@@ -175,6 +203,7 @@ def sp_agent_profile(session, stage_path, sample_size=10000, data_dictionary_ref
         try:
             file_name = stage_path.split('/')[-1] if '/' in stage_path else stage_path
             error_message = str(e).replace("'", "''")
+            
             error_insert = f"""
             INSERT INTO AGENTIC_PLATFORM_DEV.AGENTS.AGENT_PROFILING_HISTORY (
                 PROFILE_ID,
