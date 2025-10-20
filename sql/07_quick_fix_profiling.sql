@@ -24,7 +24,6 @@ RUNTIME_VERSION = '3.10'
 PACKAGES = ('snowflake-snowpark-python', 'pandas')
 HANDLER = 'sp_agent_profile'
 EXECUTE AS CALLER
-COMMENT = 'Agent 1: Data Profiling - REAL implementation'
 AS
 $$
 import json
@@ -225,7 +224,7 @@ CALL AGENTIC_PLATFORM_DEV.AGENTS.SP_AGENT_PROFILE(
     '@AGENTIC_PLATFORM_DEV.STAGING.RAW_DATA_STAGE/sample_data.csv',
     1000,
     NULL,
-    'CSV_FORMAT'
+    'AGENTIC_PLATFORM_DEV.STAGING.CSV_FORMAT'
 );
 
 -- Check if data was saved

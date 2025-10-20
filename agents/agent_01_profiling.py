@@ -444,27 +444,28 @@ def identify_quality_issues(statistics: Dict) -> List[Dict]:
 # Stored Procedure Wrapper
 # ============================================================================
 
-def sp_agent_profile(
-    session: Session,
-    stage_path: str,
-    sample_size: int = 10000,
-    data_dictionary_ref: str = None,
-    file_format: str = 'CSV_FORMAT'
-) -> str:
-    """
-    Snowflake stored procedure wrapper for the profiling agent.
-    This is called from SQL as: CALL SP_AGENT_PROFILE(...)
-    """
+## SEE 07_quick_fix_profiing.sql
+# def sp_agent_profile(
+#     session: Session,
+#     stage_path: str,
+#     sample_size: int = 10000,
+#     data_dictionary_ref: str = None,
+#     file_format: str = 'CSV_FORMAT'
+# ) -> str:
+#     """
+#     Snowflake stored procedure wrapper for the profiling agent.
+#     This is called from SQL as: CALL SP_AGENT_PROFILE(...)
+#     """
     
-    # Execute profiling
-    results = profile_data(
-        session,
-        stage_path,
-        file_format,
-        sample_size,
-        data_dictionary_ref
-    )
+#     # Execute profiling
+#     results = profile_data(
+#         session,
+#         stage_path,
+#         file_format,
+#         sample_size,
+#         data_dictionary_ref
+#     )
     
-    # Return JSON results
-    return json.dumps(results, indent=2, default=str)
+#     # Return JSON results
+#     return json.dumps(results, indent=2, default=str)
 
